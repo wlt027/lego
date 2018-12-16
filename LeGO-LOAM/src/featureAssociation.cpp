@@ -33,6 +33,7 @@
 //      IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS). October 2018.
 
 #include "utility.h"
+#include "tic_toc.h"
 
 class FeatureAssociation{
 
@@ -1830,11 +1831,15 @@ public:
             return;
         }
 
+        TicToc t_opt;
+
         updateInitialGuess();
 
         updateTransformation();
 
         integrateTransformation();
+
+        ROS_INFO("odometry cost:%fms",t_opt.toc());
 
         publishOdometry();
 

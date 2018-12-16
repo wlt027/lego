@@ -146,8 +146,8 @@ namespace vis {
         // Define Camera Render Object (for view / scene browsing)
         pangolin::OpenGlRenderState s_cam(
                 pangolin::ProjectionMatrix(2 * w, 2 * h, 500, 500, w, h, 0.1, 2000),
-                //pangolin::ModelViewLookAt(0, -1, -0.5, 0, 0, 0, 0, -1, 0)
-                pangolin::ModelViewLookAt(-5, 0, 5, 0, 0, 0, 1, 0, 1)
+                pangolin::ModelViewLookAt(0, 5, -5, 0, 0, 0, 0, 1, 1)
+                //pangolin::ModelViewLookAt(-5, 0, 5, 0, 0, 0, 1, 0, 1)
         );
 
         // Add named OpenGL viewport to window and provide 3D Handler
@@ -181,7 +181,7 @@ namespace vis {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             if (pangolin::Pushed(buttonViewFPS)) {
-                s_cam.SetModelViewMatrix(pangolin::ModelViewLookAt(0, 0, 1, 0, 0, 0, 1, 0, 0));
+                s_cam.SetModelViewMatrix(pangolin::ModelViewLookAt(0, 1, 0, 0, 0, 0, 0, 0, 1));
             }
 
             if (pangolin::Pushed(buttonRestart)) {

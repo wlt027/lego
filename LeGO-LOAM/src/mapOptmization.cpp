@@ -32,6 +32,7 @@
 //   T. Shan and B. Englot. LeGO-LOAM: Lightweight and Ground-Optimized Lidar Odometry and Mapping on Variable Terrain
 //      IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS). October 2018.
 #include "utility.h"
+#include "tic_toc.h"
 
 #include <gtsam/geometry/Rot3.h>
 #include <gtsam/geometry/Pose3.h>
@@ -571,6 +572,45 @@ public:
         return cloudOut;
     }
 
+    pcl::PointCloud<PointType>::Ptr transformPointCloud(pcl::PointCloud<PointType>::Ptr cloudIn, PointTypePose* transformIn,Eigen::Quaterniond& Qw){
+
+        pcl::PointCloud<PointType>::Ptr cloudOut(new pcl::PointCloud<PointType>());
+
+        PointType *pointFrom;
+        PointType pointTo;
+
+        int cloudSize = cloudIn->points.size();
+        cloudOut->resize(cloudSize);
+
+        for (int i = 0; i < cloudSize; ++i){
+
+            pointFrom = &cloudIn->points[i];
+            float x1 = cos(transformIn->yaw) * pointFrom->x - sin(transformIn->yaw) * pointFrom->y;
+            float y1 = sin(transformIn->yaw) * pointFrom->x + cos(transformIn->yaw)* pointFrom->y;
+            float z1 = pointFrom->z;
+
+            float x2 = x1;
+            float y2 = cos(transformIn->roll) * y1 - sin(transformIn->roll) * z1;
+            float z2 = sin(transformIn->roll) * y1 + cos(transformIn->roll)* z1;
+
+            pointTo.x = cos(transformIn->pitch) * x2 + sin(transformIn->pitch) * z2 + transformIn->x;
+            pointTo.y = y2 + transformIn->y;
+            pointTo.z = -sin(transformIn->pitch) * x2 + cos(transformIn->pitch) * z2 + transformIn->z;
+
+            Eigen::Vector3d p(pointTo.x,pointTo.y,pointTo.z);
+            p = Qw*p;
+
+            pointTo.x = p(0);
+            pointTo.y = p(1);
+            pointTo.z = p(2);
+
+            pointTo.intensity = pointFrom->intensity;
+
+            cloudOut->points[i] = pointTo;
+        }
+        return cloudOut;
+    }
+
     pcl::PointCloud<PointType>::Ptr transformPointCloud(pcl::PointCloud<PointType>::Ptr cloudIn, PointTypePose* transformIn){
 
         pcl::PointCloud<PointType>::Ptr cloudOut(new pcl::PointCloud<PointType>());
@@ -724,11 +764,19 @@ public:
         downSizeFilterGlobalMapKeyPoses.setInputCloud(globalMapKeyPoses);
         downSizeFilterGlobalMapKeyPoses.filter(*globalMapKeyPosesDS);
 
+        Eigen::Quaterniond Qw = Eigen::Quaterniond(Eigen::AngleAxisd(90 * M_PI / 180.0, Eigen::Vector3d::UnitZ())
+                                                   * Eigen::AngleAxisd(0 * M_PI / 180.0, Eigen::Vector3d::UnitY())
+                                                   * Eigen::AngleAxisd(90 * M_PI / 180.0, Eigen::Vector3d::UnitX()));
+
         for (int i = 0; i < globalMapKeyPosesDS->points.size(); ++i){
 			int thisKeyInd = (int)globalMapKeyPosesDS->points[i].intensity;
-			*globalMapKeyFrames += *transformPointCloud(cornerCloudKeyFrames[thisKeyInd],   &cloudKeyPoses6D->points[thisKeyInd]);
-			*globalMapKeyFrames += *transformPointCloud(surfCloudKeyFrames[thisKeyInd],    &cloudKeyPoses6D->points[thisKeyInd]);
-			*globalMapKeyFrames += *transformPointCloud(outlierCloudKeyFrames[thisKeyInd], &cloudKeyPoses6D->points[thisKeyInd]);
+//			*globalMapKeyFrames += *transformPointCloud(cornerCloudKeyFrames[thisKeyInd],   &cloudKeyPoses6D->points[thisKeyInd]);
+//			*globalMapKeyFrames += *transformPointCloud(surfCloudKeyFrames[thisKeyInd],    &cloudKeyPoses6D->points[thisKeyInd]);
+//			*globalMapKeyFrames += *transformPointCloud(outlierCloudKeyFrames[thisKeyInd], &cloudKeyPoses6D->points[thisKeyInd]);
+
+            *globalMapKeyFrames += *transformPointCloud(cornerCloudKeyFrames[thisKeyInd],   &cloudKeyPoses6D->points[thisKeyInd],Qw);
+            *globalMapKeyFrames += *transformPointCloud(surfCloudKeyFrames[thisKeyInd],    &cloudKeyPoses6D->points[thisKeyInd],Qw);
+            *globalMapKeyFrames += *transformPointCloud(outlierCloudKeyFrames[thisKeyInd], &cloudKeyPoses6D->points[thisKeyInd],Qw);
         }
 
         downSizeFilterGlobalMapKeyFrames.setInputCloud(globalMapKeyFrames);
@@ -745,6 +793,7 @@ public:
         globalMapKeyFrames->clear();
         globalMapKeyFramesDS->clear();     
     }
+
 
     void loopClosureThread(){
 
@@ -1435,7 +1484,11 @@ public:
 
                 downsampleCurrentScan();
 
+                TicToc t_opt;
+
                 scan2MapOptimization();
+
+                ROS_INFO("mapping cost:%fms",t_opt.toc());
 
                 saveKeyFramesAndFactor();
 
