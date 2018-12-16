@@ -58,3 +58,11 @@ target_link_libraries(mapOptmization ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${Open
 
 add_executable(transformFusion src/transformFusion.cpp)
 target_link_libraries(transformFusion ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBRARIES})
+
+find_package(Pangolin REQUIRED)
+include_directories(${Pangolin_INCLUDE_DIRS})
+
+add_executable(visualizer
+		src/Visualization_node.cpp
+		src/RosVisualization.cpp)
+target_link_libraries(visualizer ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${Pangolin_LIBRARIES} ${OpenCV_LIBS})
