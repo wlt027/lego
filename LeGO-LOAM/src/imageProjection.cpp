@@ -80,7 +80,7 @@ public:
     ImageProjection():
         nh("~"){
 
-        subLaserCloud = nh.subscribe<sensor_msgs::PointCloud2>("/velodyne_points", 1, &ImageProjection::cloudHandler, this);
+        subLaserCloud = nh.subscribe<sensor_msgs::PointCloud2>("/rslidar_points", 1, &ImageProjection::cloudHandler, this);
 
         pubFullCloud = nh.advertise<sensor_msgs::PointCloud2> ("/full_cloud_projected", 1);
         pubFullInfoCloud = nh.advertise<sensor_msgs::PointCloud2> ("/full_cloud_info", 1);
@@ -157,6 +157,9 @@ public:
 
         cloudHeader = laserCloudMsg->header;
         pcl::fromROSMsg(*laserCloudMsg, *laserCloudIn);
+
+        std::vector<int> index;
+        pcl::removeNaNFromPointCloud(*laserCloudIn,*laserCloudIn,index);
     }
     
     void cloudHandler(const sensor_msgs::PointCloud2ConstPtr& laserCloudMsg){
