@@ -198,18 +198,42 @@ public:
             thisPoint.z = laserCloudIn->points[i].z;
 
             verticalAngle = atan2(thisPoint.z, sqrt(thisPoint.x * thisPoint.x + thisPoint.y * thisPoint.y)) * 180 / M_PI;
-            rowIdn = (verticalAngle + ang_bottom) / ang_res_y;
-            if (rowIdn < 0 || rowIdn >= N_SCAN)
-                continue;
 
-            horizonAngle = atan2(thisPoint.x, thisPoint.y) * 180 / M_PI;
+            if(N_SCAN == 40)
+            {
+                if (verticalAngle < -6)
+                    rowIdn = (verticalAngle + 16) / 1.0;
+                else if (verticalAngle >= -6 && verticalAngle < 2)
+                    rowIdn = (verticalAngle + 6) / 0.33 + 10;
+                else
+                    rowIdn = (verticalAngle - 2) / 1.0 + 34;
 
-            columnIdn = -round((horizonAngle-90.0)/ang_res_x) + Horizon_SCAN/2;
-            if (columnIdn >= Horizon_SCAN)
-                columnIdn -= Horizon_SCAN;
+                if (rowIdn < 0 || rowIdn >= N_SCAN)
+                    continue;
 
-            if (columnIdn < 0 || columnIdn >= Horizon_SCAN)
-                continue;
+                horizonAngle = atan2(thisPoint.x, thisPoint.y) * 180 / M_PI;
+
+                if (horizonAngle <= -90)
+                    columnIdn = -int(horizonAngle / ang_res_x) - 450;
+                else if (horizonAngle >= 0)
+                    columnIdn = -int(horizonAngle / ang_res_x) + 1350;
+                else
+                    columnIdn = 1350 - int(horizonAngle / ang_res_x);
+            } else{
+                verticalAngle = atan2(thisPoint.z, sqrt(thisPoint.x * thisPoint.x + thisPoint.y * thisPoint.y)) * 180 / M_PI;
+                rowIdn = (verticalAngle + ang_bottom) / ang_res_y;
+                if (rowIdn < 0 || rowIdn >= N_SCAN)
+                    continue;
+
+                horizonAngle = atan2(thisPoint.x, thisPoint.y) * 180 / M_PI;
+
+                columnIdn = -round((horizonAngle-90.0)/ang_res_x) + Horizon_SCAN/2;
+                if (columnIdn >= Horizon_SCAN)
+                    columnIdn -= Horizon_SCAN;
+
+                if (columnIdn < 0 || columnIdn >= Horizon_SCAN)
+                    continue;
+            }
 
             range = sqrt(thisPoint.x * thisPoint.x + thisPoint.y * thisPoint.y + thisPoint.z * thisPoint.z);
             rangeMat.at<float>(rowIdn, columnIdn) = range;

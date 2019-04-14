@@ -52,12 +52,20 @@ using namespace std;
 typedef pcl::PointXYZI  PointType;
 
 // VLP-16
-extern const int N_SCAN = 16;
+//extern const int N_SCAN = 16;
+//extern const int Horizon_SCAN = 1800;
+//extern const float ang_res_x = 0.2;
+//extern const float ang_res_y = 2.0;
+//extern const float ang_bottom = 15.0+0.1;
+//extern const int groundScanInd = 7;
+
+// pandar 40
+extern const int N_SCAN = 40;
 extern const int Horizon_SCAN = 1800;
 extern const float ang_res_x = 0.2;
-extern const float ang_res_y = 2.0;
-extern const float ang_bottom = 15.0+0.1;
-extern const int groundScanInd = 7;
+extern const float ang_res_y = 0.33;
+extern const float ang_bottom = 16;
+extern const int groundScanInd = 25;
 
 // Ouster OS1-64
 // extern const int N_SCAN = 64;
@@ -98,7 +106,8 @@ extern const float historyKeyframeSearchRadius = 5.0;
 extern const int   historyKeyframeSearchNum = 25;
 extern const float historyKeyframeFitnessScore = 0.3;
 
-extern const float globalMapVisualizationSearchRadius = 500.0;
+//extern const float globalMapVisualizationSearchRadius = 500.0;
+extern const float globalMapVisualizationSearchRadius = 10000.0;
 
 
 struct smoothness_t{ 
